@@ -147,6 +147,7 @@ impl ModelClient {
                     &self.config.model_family,
                     &self.client,
                     &self.provider,
+                    &self.auth_manager,
                     &self.otel_event_manager,
                 )
                 .await?;

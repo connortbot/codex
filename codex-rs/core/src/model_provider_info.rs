@@ -264,18 +264,16 @@ fn wire_api_from_env(var_name: &str) -> Option<WireApi> {
     std::env::var(var_name)
         .ok()
         .filter(|v| !v.trim().is_empty())
-        .and_then(|v| {
-            match v.trim().to_ascii_lowercase().as_str() {
-                "responses" => Some(WireApi::Responses),
-                "chat" => Some(WireApi::Chat),
-                _ => {
-                    tracing::warn!(
-                        "Invalid value for {}: '{}'. Expected 'responses' or 'chat'. Using default.",
-                        var_name,
-                        v
-                    );
-                    None
-                }
+        .and_then(|v| match v.trim().to_ascii_lowercase().as_str() {
+            "responses" => Some(WireApi::Responses),
+            "chat" => Some(WireApi::Chat),
+            _ => {
+                tracing::warn!(
+                    "Invalid value for {}: '{}'. Expected 'responses' or 'chat'. Using default.",
+                    var_name,
+                    v
+                );
+                None
             }
         })
 }
