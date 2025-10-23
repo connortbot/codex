@@ -78,6 +78,7 @@ export class Thread {
       input: prompt,
       baseUrl: this._options.baseUrl,
       apiKey: this._options.apiKey,
+      wireApi: this._options.wireApi,
       threadId: this._id,
       images,
       model: options?.model,

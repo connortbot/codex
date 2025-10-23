@@ -10,6 +10,7 @@ export type CodexExecArgs = {
 
   baseUrl?: string;
   apiKey?: string;
+  wireApi?: "responses" | "chat";
   threadId?: string | null;
   images?: string[];
   // --model
@@ -77,6 +78,9 @@ export class CodexExec {
     }
     if (args.apiKey) {
       env.CODEX_API_KEY = args.apiKey;
+    }
+    if (args.wireApi) {
+      env.OPENAI_WIRE_API = args.wireApi;
     }
 
     const child = spawn(this.executablePath, commandArgs, {

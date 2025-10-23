@@ -260,6 +260,29 @@ const DEFAULT_OLLAMA_PORT: u32 = 11434;
 
 pub const BUILT_IN_OSS_MODEL_PROVIDER_ID: &str = "oss";
 
+/// Parse WireApi from an environment variable value.
+/// Accepts "responses", "chat" (case-insensitive).
+/// Returns None if the variable is not set, empty, or contains an invalid value.
+fn wire_api_from_env(var_name: &str) -> Option<WireApi> {
+    std::env::var(var_name)
+        .ok()
+        .filter(|v| !v.trim().is_empty())
+        .and_then(|v| {
+            match v.trim().to_ascii_lowercase().as_str() {
+                "responses" => Some(WireApi::Responses),
+                "chat" => Some(WireApi::Chat),
+                _ => {
+                    tracing::warn!(
+                        "Invalid value for {}: '{}'. Expected 'responses' or 'chat'. Using default.",
+                        var_name,
+                        v
+                    );
+                    None
+                }
+            }
+        })
+}
+
 /// Built-in default provider list.
 pub fn built_in_model_providers() -> HashMap<String, ModelProviderInfo> {
     use ModelProviderInfo as P;
@@ -284,7 +307,11 @@ pub fn built_in_model_providers() -> HashMap<String, ModelProviderInfo> {
                 env_key: None,
                 env_key_instructions: None,
                 experimental_bearer_token: None,
-                wire_api: WireApi::Responses,
+                // Allow users to override the default wire API by exporting
+                // `OPENAI_WIRE_API`. This is useful when pointing Codex at
+                // providers that only support chat completions or when testing
+                // different API modes.
+                wire_api: wire_api_from_env("OPENAI_WIRE_API").unwrap_or(WireApi::Responses),
                 query_params: None,
                 http_headers: Some(
                     [("version".to_string(), env!("CARGO_PKG_VERSION").to_string())]
@@ -334,17 +361,26 @@ pub fn create_oss_provider() -> ModelProviderInfo {
         ),
     };
 
-    create_oss_provider_with_base_url(&codex_oss_base_url)
+    let wire_api = wire_api_from_env("CODEX_OSS_WIRE_API").unwrap_or(WireApi::Chat);
+
+    create_oss_provider_with_base_url_and_wire_api(&codex_oss_base_url, wire_api)
 }
 
 pub fn create_oss_provider_with_base_url(base_url: &str) -> ModelProviderInfo {
+    create_oss_provider_with_base_url_and_wire_api(base_url, WireApi::Chat)
+}
+
+pub fn create_oss_provider_with_base_url_and_wire_api(
+    base_url: &str,
+    wire_api: WireApi,
+) -> ModelProviderInfo {
     ModelProviderInfo {
         name: "gpt-oss".into(),
         base_url: Some(base_url.into()),
         env_key: None,
         env_key_instructions: None,
         experimental_bearer_token: None,
-        wire_api: WireApi::Chat,
+        wire_api,
         query_params: None,
         http_headers: None,
         env_http_headers: None,
