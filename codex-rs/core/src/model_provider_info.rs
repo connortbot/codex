@@ -260,9 +260,6 @@ const DEFAULT_OLLAMA_PORT: u32 = 11434;
 
 pub const BUILT_IN_OSS_MODEL_PROVIDER_ID: &str = "oss";
 
-/// Parse WireApi from an environment variable value.
-/// Accepts "responses", "chat" (case-insensitive).
-/// Returns None if the variable is not set, empty, or contains an invalid value.
 fn wire_api_from_env(var_name: &str) -> Option<WireApi> {
     std::env::var(var_name)
         .ok()
@@ -307,10 +304,6 @@ pub fn built_in_model_providers() -> HashMap<String, ModelProviderInfo> {
                 env_key: None,
                 env_key_instructions: None,
                 experimental_bearer_token: None,
-                // Allow users to override the default wire API by exporting
-                // `OPENAI_WIRE_API`. This is useful when pointing Codex at
-                // providers that only support chat completions or when testing
-                // different API modes.
                 wire_api: wire_api_from_env("OPENAI_WIRE_API").unwrap_or(WireApi::Responses),
                 query_params: None,
                 http_headers: Some(
